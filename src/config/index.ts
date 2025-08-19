@@ -3,8 +3,13 @@ import { z } from 'zod';
 const envSchema = z.object({
   NODE_ENV: z.string().default('development'),
   PORT: z.coerce.number().default(8080),
-  DATABASE_URL: z.string().min(1, 'DATABASE_URL is required').optional(),
-  JWT_SECRET: z.string().min(32, 'JWT_SECRET must be at least 32 characters').optional(),
+  // Supabase configuration
+  SUPABASE_URL: z.string().url('SUPABASE_URL must be a valid URL'),
+  SUPABASE_ANON_KEY: z.string().min(1, 'SUPABASE_ANON_KEY is required'),
+  SUPABASE_SERVICE_ROLE_KEY: z.string().min(1, 'SUPABASE_SERVICE_ROLE_KEY is required'),
+  // Legacy database URL (optional for migration)
+  DATABASE_URL: z.string().optional(),
+  JWT_SECRET: z.string().optional(),
   OPENAI_API_KEY: z.string().optional(),
   PINECONE_API_KEY: z.string().optional(),
   S3_BUCKET: z.string().optional(),
@@ -28,16 +33,6 @@ if (!parsed.success) {
   // eslint-disable-next-line no-console
   console.error('Invalid environment configuration', parsed.error.flatten());
   throw new Error('Invalid environment configuration');
-}
-
-// Validate required fields for production
-if (parsed.data.NODE_ENV === 'production') {
-  if (!parsed.data.DATABASE_URL) {
-    throw new Error('DATABASE_URL is required in production');
-  }
-  if (!parsed.data.JWT_SECRET) {
-    throw new Error('JWT_SECRET is required in production');
-  }
 }
 
 const raw = parsed.data;
