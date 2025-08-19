@@ -8,6 +8,11 @@
     "build": "tsc",
     "start": "node dist/index.js",
     "test": "npm run build && jest --runInBand --passWithNoTests",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate deploy",
+    "prisma:migrate:dev": "prisma migrate dev",
+    "prisma:seed": "ts-node prisma/seed.ts",
+    "prisma:studio": "prisma studio",
     "supabase:setup": "echo 'Supabase setup complete - check your environment variables'",
     "supabase:test": "node -e \"console.log('Testing Supabase connection...')\""
   },
