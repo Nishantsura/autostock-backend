@@ -21,6 +21,4 @@ services:
   
   - type: pserv
     name: autostock-db
-    env: postgresql
     plan: starter
-    startCommand: echo "PostgreSQL service started"
