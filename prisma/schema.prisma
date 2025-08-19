@@ -1,0 +1,242 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Company {
+  id                      String          @id @default(uuid())
+  name                    String
+  domain                  String          @unique
+  taxRegistration         String?
+  defaultValuationMethod  String?
+  users                   User[]
+  stores                  Store[]
+  products                Product[]
+  suppliers               Supplier[]
+  purchaseOrders          PurchaseOrder[]
+  categories              Category[]
+  stockRecords            StockRecord[]
+  createdAt               DateTime        @default(now())
+}
+
+model User {
+  id        String   @id @default(uuid())
+  companyId String
+  company   Company  @relation(fields: [companyId], references: [id])
+  name      String
+  email     String   @unique
+  role      String
+  createdAt DateTime @default(now())
+}
+
+model Store {
+  id             String        @id @default(uuid())
+  companyId      String
+  company        Company       @relation(fields: [companyId], references: [id])
+  type           String
+  name           String
+  address        String?
+  posIntegration Json?
+  contactPerson  String?
+  capacityUnits  Int?
+  zones          Zone[]
+  stockRecords   StockRecord[]
+  createdAt      DateTime      @default(now())
+}
+
+model Zone {
+  id      String @id @default(uuid())
+  storeId String
+  store   Store  @relation(fields: [storeId], references: [id])
+  name    String
+  aisles  Aisle[]
+}
+
+model Aisle {
+  id     String @id @default(uuid())
+  zoneId String
+  zone   Zone   @relation(fields: [zoneId], references: [id])
+  name   String
+  racks  Rack[]
+}
+
+model Rack {
+  id      String @id @default(uuid())
+  aisleId String
+  aisle   Aisle  @relation(fields: [aisleId], references: [id])
+  name    String
+  rows    Int?
+  shelves Shelf[]
+}
+
+model Shelf {
+  id     String @id @default(uuid())
+  rackId String
+  rack   Rack   @relation(fields: [rackId], references: [id])
+  level  Int
+  bins   Bin[]
+}
+
+model Bin {
+  id                 String        @id @default(uuid())
+  shelfId            String
+  shelf              Shelf         @relation(fields: [shelfId], references: [id])
+  code               String
+  barcode            String?
+  maxQtyUnits        Int?
+  maxVolumeM3        Float?
+  maxWeightKg        Float?
+  currentQty         Int           @default(0)
+  currentVolume      Float?
+  temperatureCtrl    Boolean       @default(false)
+  allowedProductTags String[]      @default([])
+  stockRecords       StockRecord[]
+
+  @@index([shelfId, code])
+}
+
+model Category {
+  id        String   @id @default(uuid())
+  companyId String
+  company   Company  @relation(fields: [companyId], references: [id])
+  name      String
+  products  Product[]
+}
+
+model Product {
+  id          String    @id @default(uuid())
+  companyId   String
+  company     Company   @relation(fields: [companyId], references: [id])
+  title       String
+  brand       String?
+  categoryId  String?
+  category    Category? @relation(fields: [categoryId], references: [id])
+  description String?
+  tags        String[]  @default([])
+  dimensions  Json?
+  weight      Float?
+  images      String[]  @default([])
+  attributes  Json?
+  skus        SKU[]
+}
+
+model SKU {
+  id                String       @id @default(uuid())
+  productId         String
+  product           Product      @relation(fields: [productId], references: [id])
+  skuCode           String       @unique
+  barcode           String?
+  mpn               String?
+  model             String?
+  unitOfMeasure     String       @default("pcs")
+  packSize          Int          @default(1)
+  isTrackedByLot    Boolean      @default(false)
+  isTrackedBySerial Boolean      @default(false)
+  stockRecords      StockRecord[]
+  poLines           POLine[]
+}
+
+model StockRecord {
+  id            String   @id @default(uuid())
+  companyId     String
+  company       Company  @relation(fields: [companyId], references: [id])
+  storeId       String
+  store         Store    @relation(fields: [storeId], references: [id])
+  skuId         String
+  sku           SKU      @relation(fields: [skuId], references: [id])
+  binId         String?
+  bin           Bin?     @relation(fields: [binId], references: [id])
+  onHand        Int      @default(0)
+  reserved      Int      @default(0)
+  inTransit     Int      @default(0)
+  safetyStock   Int      @default(0)
+  reorderPoint  Int      @default(0)
+  lastCountedAt DateTime?
+
+  @@index([companyId, skuId, storeId])
+}
+
+model Supplier {
+  id            String          @id @default(uuid())
+  companyId     String
+  company       Company         @relation(fields: [companyId], references: [id])
+  name          String
+  contact       String?
+  leadTimeDays  Int?
+  moq           Int?
+  paymentTerms  String?
+  purchaseOrders PurchaseOrder[]
+}
+
+model PurchaseOrder {
+  id                String      @id @default(uuid())
+  companyId         String
+  company           Company     @relation(fields: [companyId], references: [id])
+  supplierId        String
+  supplier          Supplier    @relation(fields: [supplierId], references: [id])
+  poNumber          String
+  status            String
+  expectedDelivery  DateTime?
+  lines             POLine[]
+  createdAt         DateTime    @default(now())
+  receipts          PurchaseReceipt[]
+}
+
+model POLine {
+  id                   String         @id @default(uuid())
+  purchaseOrderId      String
+  purchaseOrder        PurchaseOrder  @relation(fields: [purchaseOrderId], references: [id])
+  skuId                String
+  sku                  SKU            @relation(fields: [skuId], references: [id])
+  qtyOrdered           Int
+  qtyReceived          Int            @default(0)
+  unitCost             Float
+  landedCostComponents Json?
+  receiptLines         PurchaseReceiptLine[]
+}
+
+model PurchaseReceipt {
+  id         String                @id @default(uuid())
+  poId       String
+  po         PurchaseOrder         @relation(fields: [poId], references: [id])
+  receivedAt DateTime              @default(now())
+  lines      PurchaseReceiptLine[]
+}
+
+model PurchaseReceiptLine {
+  id          String            @id @default(uuid())
+  receiptId   String
+  receipt     PurchaseReceipt   @relation(fields: [receiptId], references: [id])
+  poLineId    String
+  poLine      POLine            @relation(fields: [poLineId], references: [id])
+  skuId       String
+  qtyReceived Int
+}
+
+model InventoryAdjustment {
+  id         String   @id @default(uuid())
+  companyId  String
+  skuId      String
+  storeId    String
+  binId      String?
+  qtyBefore  Int
+  qtyAfter   Int
+  delta      Int
+  reason     String
+  adjustedBy String
+  createdAt  DateTime @default(now())
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  entity    String
+  entityId  String
+  action    String
+  payload   Json
+  userId    String?
+  createdAt DateTime @default(now())
+}

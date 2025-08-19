@@ -1,0 +1,28 @@
+{
+  "openapi": "3.0.3",
+  "info": { "title": "Autostock Backend API", "version": "0.1.0" },
+  "servers": [{ "url": "http://localhost:8080" }],
+  "paths": {
+    "/api/v1/companies": {
+      "post": { "summary": "Create company", "responses": { "201": { "description": "Created" }, "400": { "description": "Validation error" } } }
+    },
+    "/api/v1/products": {
+      "post": { "summary": "Create product", "responses": { "201": { "description": "Created" }, "400": { "description": "Validation error" } } }
+    },
+    "/api/v1/stock": {
+      "get": { "summary": "List stock records", "responses": { "200": { "description": "OK" }, "400": { "description": "Validation error" } } }
+    },
+    "/api/v1/stock/in": {
+      "post": { "summary": "Stock in", "responses": { "200": { "description": "OK" }, "400": { "description": "Validation error" } } }
+    },
+    "/api/v1/stock/out": {
+      "post": { "summary": "Stock out", "responses": { "200": { "description": "OK" }, "400": { "description": "Validation error" } } }
+    },
+    "/api/v1/purchase-orders": {
+      "post": { "summary": "Create PO", "responses": { "201": { "description": "Created" }, "400": { "description": "Validation error" } } }
+    },
+    "/api/v1/purchase-orders/{id}/receive": {
+      "post": { "summary": "Receive PO", "responses": { "200": { "description": "OK" }, "400": { "description": "Validation error" } } }
+    }
+  }
+}

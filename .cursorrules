@@ -1,0 +1,141 @@
+# Autostock Backend – Cursor Rules
+
+Purpose: Ensure the assistant builds the backend while teaching step-by-step. Follow these rules for every change, commit, and explanation.
+
+## 0) Operating Mode
+- Teach mode ON: For each change, include a brief “Teach” section explaining what and why in simple terms.
+- Be concise by default; expand details only when asked.
+- Default stack: TypeScript + Express + Prisma (Postgres) + Zod + JWT + Jest.
+- Prefer explicit, readable code over cleverness. Add minimal comments (docstrings for non-trivial functions).
+
+## 1) Message Structure (per response)
+- What I did: bullet list of edits and commands.
+- Why it matters: 1–3 bullets.
+- How to run: exact commands (non-interactive).
+- Teach: short conceptual notes (e.g., definitions, tradeoffs, gotchas).
+- Next: the smallest shippable next step.
+
+## 2) Project Blueprint (source of truth)
+Use this as the canonical scaffold and scope unless the user changes it. Do not drift from it.
+
+### Folder Structure
+```
+autostock-backend/
+├── README.md
+├── package.json
+├── tsconfig.json
+├── .env.example
+├── prisma/
+│   ├── schema.prisma
+│   └── seed.ts
+├── src/
+│   ├── index.ts
+│   ├── app.ts
+│   ├── server.ts
+│   ├── config/
+│   │   └── index.ts
+│   ├── db/
+│   │   └── prismaClient.ts
+│   ├── auth/
+│   │   ├── middleware.ts
+│   │   └── strategies.ts
+│   ├── routes/
+│   │   ├── companies.ts
+│   │   ├── users.ts
+│   │   ├── stores.ts
+│   │   ├── products.ts
+│   │   ├── skus.ts
+│   │   ├── rackspace.ts
+│   │   ├── suppliers.ts
+│   │   ├── purchaseOrders.ts
+│   │   ├── inventory.ts
+│   │   └── integrations.ts
+│   ├── services/
+│   │   ├── companyService.ts
+│   │   ├── productService.ts
+│   │   ├── inventoryService.ts
+│   │   └── aiAgentService.ts
+│   ├── validators/
+│   │   ├── company.validator.ts
+│   │   └── product.validator.ts
+│   ├── utils/
+│   │   └── logger.ts
+│   └── types/
+│       └── index.ts
+└── tests/
+    └── integration/
+```
+
+### package.json (scripts)
+- dev: ts-node-dev on src/index.ts
+- build: tsc
+- start: node dist/index.js
+- prisma:migrate, prisma:generate, prisma:seed
+- test: jest
+
+### .env.example
+- DATABASE_URL, JWT_SECRET, PORT, OPENAI_API_KEY, PINECONE_API_KEY, S3_*
+
+### Prisma Schema
+- Use the full schema provided by the user (Companies, Users, Stores, Zones/Aisles/Racks/Shelves/Bins, Category, Product, SKU, StockRecord, Supplier, PurchaseOrder, POLine, PurchaseReceipt(+Line), InventoryAdjustment, AuditLog). Keep names and shapes identical.
+
+### Seed Guidance
+- Create one company, one admin user, two stores, categories, products with randomized SKUs; minimal but realistic.
+
+### REST API Spec
+- Base: /api/v1
+- Implement endpoints exactly as specified by the user (companies, users, stores, rackspace, categories/products, skus, stock records, purchase orders & receipts, suppliers, inventory adjustments/audit, integrations). Validate requests with Zod.
+
+## 3) Build Order (strict)
+1) Scaffolding: package.json, tsconfig.json, .env.example, README.md, folders.
+2) Prisma: schema.prisma → generate → migrate → seed.
+3) App bootstrap: src/index.ts, app.ts, server.ts, config loader, logger, Prisma client.
+4) Auth: JWT middleware and basic strategy (verify Bearer token; allow anonymous for company create if needed).
+5) Validators (Zod) for core DTOs: product, stockIn, company, user, store.
+6) Routes (minimal controllers) wired to services; services use Prisma; transactions for stock mutations.
+7) Tests: add integration tests for stock in/out and PO receive.
+8) Integrations stubs and webhook security.
+
+Do not proceed to a later step until earlier steps are green (build + typecheck + minimal run).
+
+## 4) Coding Conventions
+- TypeScript strict true. No implicit any. No eslint-disable unless justified.
+- Names: descriptive, full words. Functions are verbs, variables are nouns.
+- Control flow: early returns, handle errors first.
+- HTTP errors: use proper status codes; return problem details as `{ error: { code, message, details? } }`.
+- Validation: Zod at the edge; never trust client input.
+- Logging: structured logs with levels (info, warn, error) and correlation id if present.
+
+## 5) Data & Transactions
+- Use Prisma transactions for stock in/out, PO receive. Adjust `StockRecord` and `Bin.currentQty` atomically.
+- Write `InventoryAdjustment` and `AuditLog` for every stock change.
+- Indexes: `(companyId, skuId, storeId)` on `StockRecord`; `(shelfId, code)` on `Bin`.
+
+## 6) Security
+- JWT required for protected routes; expect header `Authorization: Bearer <token>`.
+- Webhooks: require HMAC or shared secret token; reject if invalid.
+- Secrets only from env; never commit real secrets.
+
+## 7) Testing
+- Prefer integration tests for critical flows (stock in/out, PO receive).
+- Deterministic seeds for test environment.
+
+## 8) CLI & Commands
+- Use non-interactive flags. After edits, run build/typecheck when possible.
+- Document run commands in each response’s “How to run”.
+
+## 9) Git Hygiene
+- Small, focused edits. Meaningful commit messages.
+
+## 10) When Explaining (Teach)
+- Keep to 3–6 sentences max unless asked for more.
+- Use analogies sparingly; prefer concrete examples.
+- Link concepts to immediate code/tasks being done.
+
+## 11) Non‑negotiables
+- Don’t change API shapes or schema unless the user approves.
+- Don’t auto-create unasked third-party services.
+- Don’t block on optional tooling; ship working code first.
+
+## 12) Next Step after this file
+- Create initial scaffold files (`package.json`, `tsconfig.json`, `.env.example`, `README.md`) using the blueprint, then install deps and initialize Prisma.
