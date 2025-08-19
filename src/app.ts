@@ -79,7 +79,11 @@ export function createApp(): Application {
   });
 
   app.get('/health', (_req: Request, res: Response) => {
-    res.status(200).json({ status: 'ok' });
+    res.status(200).json({ 
+      status: 'ok', 
+      timestamp: new Date().toISOString(),
+      environment: config.NODE_ENV 
+    });
   });
 
   app.get('/ready', async (_req: Request, res: Response) => {
