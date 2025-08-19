@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: autostock-backend
+    env: node
+    buildCommand: npm ci && npm run build && npm run prisma:generate
+    startCommand: npm start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 8080
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CORS_ORIGINS
+        value: https://autostock-frontend-aiqqdaxlt-suras-projects-1078d583.vercel.app
+      - key: DATABASE_URL
+        value: postgresql://postgres:paNVrUF7nb2ilJN2@db.qewnmdcdozsqcqluxvew.supabase.co:5432/postgres
+      - key: SUPABASE_URL
+        value: https://qewnmdcdozsqcqluxvew.supabase.co
+      - key: SUPABASE_ANON_KEY
+        value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFld25tZGNkb3pzcWNxbHV4dmV3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU2MTA1ODksImV4cCI6MjA3MTE4NjU4OX0.SSab_UIp8Faza1owdmI7BsCj15OA8quecRspUva1dQk
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFld25tZGNkb3pzcWNxbHV4dmV3Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NTYxMDU4OSwiZXhwIjoyMDcxMTg2NTg5fQ.nRrPL68ObsYtEaTQBwGQMy511ZqcqBo4jru8PWy-Ex4
