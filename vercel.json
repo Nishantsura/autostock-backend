@@ -2,18 +2,18 @@
   "version": 2,
   "builds": [
     {
-      "src": "dist/index.js",
+      "src": "dist/index-simple.js",
       "use": "@vercel/node"
     }
   ],
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "dist/index.js"
+      "dest": "dist/index-simple.js"
     }
   ],
   "env": {
     "NODE_ENV": "production"
   },
-  "installCommand": "npm install && npm run build && npm run prisma:generate"
+  "installCommand": "npm install && npm run build"
 }
